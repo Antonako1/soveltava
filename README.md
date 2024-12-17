@@ -32,6 +32,9 @@ Releasissa on valmiit binaarit tehtynä
  - CMake, Ninja
  - C/C++ compiler
 
+ - Ulkoset kirjastot
+    - Löytyy releaseista. Pasteta \backend\:iin
+
 
 ### Pistä pyörimään
 
