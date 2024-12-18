@@ -9,6 +9,8 @@
 #include <http.hh>
 #include <string>
 
+#define REQUEST_BUFFER 8192
+
 extern std::string port; /*main.cc*/
 
 class Server {

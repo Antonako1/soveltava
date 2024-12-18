@@ -137,6 +137,24 @@ Crypto Crypto::find_by_tag(Database& db, const std::string& tag) {
     return crypto;
 }
 
+std::vector<Crypto> Crypto::vector_find_by_user_id(Database& db, int user_id) {
+    sqlite3_stmt* stmt;
+    std::string query = "SELECT * FROM cryptos WHERE user_id = " + std::to_string(user_id) + ";";
+    sqlite3_prepare_v2(db.get_db(), query.c_str(), -1, &stmt, nullptr);
+
+    std::vector<Crypto> cryptos;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        Crypto crypto;
+        crypto.set_id(sqlite3_column_int(stmt, 0));
+        crypto.set_name(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)));
+        crypto.set_tag(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
+        crypto.set_price(sqlite3_column_double(stmt, 3));
+        cryptos.push_back(crypto);
+    }
+    sqlite3_finalize(stmt);
+    return cryptos;
+}
+
 json Crypto::to_json(){
     json j;
     j["id"] = id;
@@ -171,6 +189,24 @@ bool Stock::save(Database& db) {
     std::string query = "INSERT INTO stocks (tag, name, price) VALUES ('" +
                         tag + "', '" + name + "', " + std::to_string(price) + ");";
     return db.execute_query(query);
+}
+
+std::vector<Stock> Stock::vector_find_by_user_id(Database& db, int user_id) {
+    sqlite3_stmt* stmt;
+    std::string query = "SELECT * FROM stocks WHERE user_id = " + std::to_string(user_id) + ";";
+    sqlite3_prepare_v2(db.get_db(), query.c_str(), -1, &stmt, nullptr);
+
+    std::vector<Stock> stocks;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        Stock stock;
+        stock.set_id(sqlite3_column_int(stmt, 0));
+        stock.set_tag(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)));
+        stock.set_name(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
+        stock.set_price(sqlite3_column_double(stmt, 3));
+        stocks.push_back(stock);
+    }
+    sqlite3_finalize(stmt);
+    return stocks;
 }
 
 Stock Stock::find_by_id(Database& db, int stock_id) {
@@ -238,6 +274,13 @@ void Transaction::set_amount(double amount) { this->amount = amount; }
 double Transaction::get_price() const { return price; }
 void Transaction::set_price(double price) { this->price = price; }
 
+int Transaction::get_stock_id() const {
+    return stock_id;
+}
+void Transaction::set_stock_id(int stock_id) {
+    this->stock_id = stock_id;
+}
+
 std::string Transaction::get_type() const { return type; }
 void Transaction::set_type(const std::string& type) { this->type = type; }
 
@@ -251,13 +294,59 @@ bool Transaction::save(Database& db) {
     return db.execute_query(query);
 }
 
-Transaction Transaction::find_by_id(Database& db, int transaction_id){
+Transaction Transaction::find_by_id(Database& db, int transaction_id) {
+    sqlite3_stmt* stmt = nullptr;
+    std::string query = "SELECT * FROM transactions WHERE id = ?;";
+    Transaction transaction;
+
+    // Prepare the SQL statement
+    if (sqlite3_prepare_v2(db.get_db(), query.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        throw std::runtime_error("Failed to prepare SQL statement: " + std::string(sqlite3_errmsg(db.get_db())));
+    }
+
+    try {
+        // Bind the parameter
+        if (sqlite3_bind_int(stmt, 1, transaction_id) != SQLITE_OK) {
+            throw std::runtime_error("Failed to bind parameter: " + std::string(sqlite3_errmsg(db.get_db())));
+        }
+
+        // Execute the statement and process the result
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            transaction.set_id(sqlite3_column_int(stmt, 0));
+            transaction.set_user_id(sqlite3_column_int(stmt, 1));
+            transaction.set_crypto_id(sqlite3_column_int(stmt, 2));
+            transaction.set_amount(sqlite3_column_double(stmt, 3));
+            transaction.set_price(sqlite3_column_double(stmt, 4));
+
+            const char* type = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5));
+            transaction.set_type(type ? type : "");  // Handle NULL
+
+            const char* date = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
+            transaction.set_date(date ? date : "");  // Handle NULL
+        } else {
+            throw std::runtime_error("Transaction not found for id: " + std::to_string(transaction_id));
+        }
+    } catch (...) {
+        // Finalize the statement before rethrowing
+        sqlite3_finalize(stmt);
+        throw;
+    }
+
+    // Finalize the statement
+    sqlite3_finalize(stmt);
+
+    return transaction;
+}
+
+
+std::vector<Transaction> Transaction::vector_find_by_user_id(Database& db, int user_id){
     sqlite3_stmt* stmt;
-    std::string query = "SELECT * FROM transactions WHERE id = " + std::to_string(transaction_id) + ";";
+    std::string query = "SELECT * FROM transactions WHERE user_id = " + std::to_string(user_id) + ";";
     sqlite3_prepare_v2(db.get_db(), query.c_str(), -1, &stmt, nullptr);
 
-    Transaction transaction;
-    if (sqlite3_step(stmt) == SQLITE_ROW) {
+    std::vector<Transaction> transactions;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        Transaction transaction;
         transaction.set_id(sqlite3_column_int(stmt, 0));
         transaction.set_user_id(sqlite3_column_int(stmt, 1));
         transaction.set_crypto_id(sqlite3_column_int(stmt, 2));
@@ -265,9 +354,10 @@ Transaction Transaction::find_by_id(Database& db, int transaction_id){
         transaction.set_price(sqlite3_column_double(stmt, 4));
         transaction.set_type(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5)));
         transaction.set_date(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6)));
+        transactions.push_back(transaction);
     }
     sqlite3_finalize(stmt);
-    return transaction;
+    return transactions;
 }
 
 Transaction Transaction::find_by_user_id(Database& db, int user_id){

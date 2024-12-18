@@ -27,6 +27,7 @@ export interface LoginRequest {
   id: string;
   email: string;
   token: string;
+  password: string;
 }
 
 export const compare_auth_token = (input:LoginRequest) => {

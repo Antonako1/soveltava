@@ -7,7 +7,7 @@ IF EXIST "%MSVS_PATH%" CALL "%MSVS_PATH%"
 cd /D %~dp0
 if not exist build mkdir build
 cd build
-cmake .. 
+cmake .. -G "Ninja"
 cmake --build .
 
 ENDLOCAL

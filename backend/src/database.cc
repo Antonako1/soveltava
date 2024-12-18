@@ -133,17 +133,17 @@ void Database::create_tables() {
 
 void Database::insert_sample_data() {
     const char* insert_user = R"(
-        INSERT INTO User (id, name, email, age, password_hash, balance)
-        VALUES (1, 'John Doe', 'john.doe@example.com', 30, 'hashed_password', 1000.50);
+        INSERT INTO users (id, name, email, age, password_hash, balance)
+        VALUES (2, 'AT;AT', 'test@test.com', 30, '$2a$10$M723buNStLXg2jv15vS/6OElG2xlktNHI4oINNcPqb2VgcqSip47a', 1000.50);
     )";
 
     const char* insert_crypto = R"(
-        INSERT INTO Crypto (id, tag, name, price)
+        INSERT INTO cryptos (id, tag, name, price)
         VALUES (1, 'BTC', 'Bitcoin', 50000.00);
     )";
 
     const char* insert_stock = R"(
-        INSERT INTO Stock (id, tag, name, price)
+        INSERT INTO stocks (id, tag, name, price)
         VALUES (1, 'AAPL', 'Apple Inc.', 150.00);
     )";
 

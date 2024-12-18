@@ -4,7 +4,6 @@
 #include <sstream>
 #include <iostream>
 
-
 _HTTP_REQUEST Server::parse_http_request(const std::string& request) {
     std::istringstream stream(request);
     _HTTP_REQUEST http_request;
@@ -86,7 +85,7 @@ void Server::start() {
 size_t __send(SOCKET socket, const char* buffer, size_t length, int flags) {
     size_t total_sent = 0;
     while (total_sent < length) {
-        size_t sent_bytes = send(socket, buffer + total_sent, length - total_sent, flags);
+        size_t sent_bytes = (size_t)send(socket, buffer + total_sent, length - total_sent, flags);
         if (sent_bytes == SOCKET_ERROR) {
             return sent_bytes;
         }
@@ -103,7 +102,7 @@ void Server::accept_connections() {
             continue;
         }
 
-        char buffer[4096] = {0};
+        char buffer[REQUEST_BUFFER] = {0};
         int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received == SOCKET_ERROR) {
             std::cerr << "Error receiving data: " << WSAGetLastError() << std::endl;
@@ -152,13 +151,17 @@ void Server::accept_connections() {
                 HTTP_STATUS_CODE::OK,
                 HTTP_VERSION::HTTP_1_1,
                 HTTP_METHOD::POST,
-                "Hello, World!",
+                "Base answer.",
                 HTTP_CONTENT_TYPE::TEXT_PLAIN,
                 "/",
                 "close",
                 "localhost:"+std::to_string(this->port)
             );
 
+
+            /*+++
+            ENDPOINT TREE
+            ---*/
             if(http_request.url == "/login"){
                 if(verbose)std::cout << "login endpoint" << std::endl;
                 login_endpoint(http_request, response);
@@ -166,6 +169,10 @@ void Server::accept_connections() {
             else if(http_request.url == "/register"){
                 if(verbose)std::cout << "register endpoint" << std::endl;
                 register_endpoint(http_request, response);
+            }
+            else if(http_request.url == "/get"){
+                if(verbose)std::cout << "get endpoint" << std::endl;
+                get_endpoint(http_request, response);
             }
             
 

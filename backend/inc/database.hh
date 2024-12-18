@@ -114,6 +114,8 @@ public:
 
     static Crypto find_by_tag(Database& db, const std::string& tag);
 
+    static std::vector<Crypto> vector_find_by_user_id(Database& db, int user_id);
+
     json to_json();  
 };
 
@@ -148,7 +150,7 @@ public:
     static Stock find_by_id(Database& db, int stock_id);
 
     static Stock find_by_tag(Database& db, const std::string& tag);
-
+    static std::vector<Stock> vector_find_by_user_id(Database& db, int user_id);
     json to_json();  
 };
 
@@ -197,7 +199,7 @@ public:
 
     bool save(Database& db);
     static Transaction find_by_id(Database& db, int transaction_id);
-
+    static std::vector<Transaction> vector_find_by_user_id(Database& db, int user_id);
     static Transaction find_by_user_id(Database& db, int user_id);
     static Transaction find_by_crypto_id(Database& db, int crypto_id);
     static Transaction find_by_stock_id(Database& db, int stock_id);
