@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { BaseInformation, server_url, User } from "../utils/Data";
+import { server_url, UserInformation } from "../utils/Data";
 import styles from "../styles/login.module.css";
 import { compare_auth_token, comparePassword, generate_auth_token, hashPassword, LoginRequest } from "../utils/hash";
 import { BaseInformationContext } from "../App";
@@ -111,12 +111,13 @@ const Login = () => {
                 }
                 const data = await userResponse.json();
                 console.log("User data:", data);
-                const user: User = data;
+                const userInfo: UserInformation = data;
 
                 baseInformation?.setBaseInformation({
-                    user,
+                    userInformation: userInfo,
                     token: loginRequest.token,
                     loggedIn: true,
+                    loading: false,
                     news: [{
                         title: "Welcome to the Bank of Helmethill",
                         id: 0,

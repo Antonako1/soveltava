@@ -22,13 +22,16 @@ export interface StockInfo {
     symbol: string;
     price: number;
 }
-
 export interface User {
     id: number;
     name: string;
     email: string;
     password: string;
     balance: number;
+}
+
+export interface UserInformation {
+    user: User;
     crypto: CryptoInfo[];
     stocks: StockInfo[];
     transactions: Transaction[];
@@ -36,7 +39,8 @@ export interface User {
 
 export interface BaseInformation {
     loggedIn: boolean;
-    user: User | null;
+    loading: boolean;
+    userInformation: UserInformation | null;
     news: NewsInfo[];
     token: string;
 }

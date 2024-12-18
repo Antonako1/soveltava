@@ -34,8 +34,6 @@ function App() {
     if (savedBaseInfo) {
       setBaseInformation(JSON.parse(savedBaseInfo));
     }
-
-
   }, []);
 
   useEffect(() => {
@@ -53,6 +51,7 @@ function App() {
             <ul>
               <li><Link to="/">Home</Link></li>
               <li><Link to="/about">About</Link></li>
+              <li><Link to="/login">Login/Logout</Link></li>
             </ul>
           </nav>
 
