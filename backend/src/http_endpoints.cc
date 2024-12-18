@@ -185,16 +185,26 @@ void delete_endpoint(_HTTP_REQUEST& request, _HTTP_RESPONSE& response) {
     }
 }
 
+/*
+Body: {
+    "email":"",
+    "token":""
+}
+*/
 void get_endpoint(_HTTP_REQUEST& request, _HTTP_RESPONSE& response) {
     try {
         json body = json::parse(request.body);
         std::string email = body.at("email").get<std::string>();
-
+        std::string token = body.at("token").get<std::string>();
         db.open(db.db_name);
 
         User user = User::find_by_email(db, email);
         if (user.get_id() == 0) {
             throw std::runtime_error("User not found. Register first.");
+        }
+
+        if(generate_auth_token(user) != token) {
+            throw std::runtime_error("Unauthorized access. Invalid token.");
         }
 
         Transaction test = Transaction::find_by_id(db, 1);

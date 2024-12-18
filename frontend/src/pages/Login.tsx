@@ -104,7 +104,12 @@ const Login = () => {
                         "Content-Type": "application/json",
                         Authorization: generate_auth_token(loginRequest),
                     },
-                    body: JSON.stringify({ email }),
+                    body: JSON.stringify(
+                        { 
+                            email, 
+                            token: generate_auth_token(loginRequest)
+                        }
+                    ),
                 });
                 if (!userResponse.ok) {
                     throw new Error(`Error: ${userResponse.statusText}`);

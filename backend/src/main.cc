@@ -11,8 +11,6 @@ bool verbose = false;
 
 int main(int argc, char** argv) {
     try {
-
-        
         std::cout << "Reading configuration file!" << std::endl;
         std::shared_ptr<ATRC_FD> fd = Read("backend.config", "utf-8", ".config");
         if(!fd) {
@@ -23,9 +21,7 @@ int main(int argc, char** argv) {
         verbose = atrc_to_bool(ReadKey(fd, "CONFIG", "VERBOSE"));
 
         port = ReadKey(fd, "CONFIG", "PORT");
-        if(verbose) {
-            std::cout << "Port: " << port << std::endl;
-        }
+        if(verbose) std::cout << "Port: " << port << std::endl;
         
         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 10);
         std::cout << ReadKey(fd, "CONFIG", "WELCOME_MESSAGE") << std::endl << std::endl;

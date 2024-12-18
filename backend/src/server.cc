@@ -151,7 +151,7 @@ void Server::accept_connections() {
                 HTTP_STATUS_CODE::OK,
                 HTTP_VERSION::HTTP_1_1,
                 HTTP_METHOD::POST,
-                "Base answer.",
+                "Unknown endpoint or method requested.",
                 HTTP_CONTENT_TYPE::TEXT_PLAIN,
                 "/",
                 "close",
