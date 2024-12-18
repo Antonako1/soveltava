@@ -83,6 +83,18 @@ void Server::start() {
     accept_connections();
 }
 
+size_t __send(SOCKET socket, const char* buffer, size_t length, int flags) {
+    size_t total_sent = 0;
+    while (total_sent < length) {
+        size_t sent_bytes = send(socket, buffer + total_sent, length - total_sent, flags);
+        if (sent_bytes == SOCKET_ERROR) {
+            return sent_bytes;
+        }
+        total_sent += sent_bytes;
+    }
+    return total_sent;
+}
+
 void Server::accept_connections() {
     while (true) {
         SOCKET client_socket = accept(listen_socket_, nullptr, nullptr);
@@ -98,58 +110,76 @@ void Server::accept_connections() {
             closesocket(client_socket);
             continue;
         }
-        std::cout << "New connection established." << std::endl;
+        if(verbose)std::cout << "New connection established." << std::endl;
 
         // parse request
         std::string request_data(buffer, bytes_received);
         _HTTP_REQUEST http_request = parse_http_request(request_data);
 
-        std::cout << "\nRequest received:" << std::endl;
-        std::cout << "Method: " << http_request.method << "\n"
+        if(verbose)std::cout << "\nRequest received:" << std::endl;
+        if(verbose)std::cout << "Method: " << http_request.method << "\n"
                   << "URL: " << http_request.url << "\n"
                   << "Version: " << http_request.version << "\n";
-        for (const auto& [key, value] : http_request.headers) {
-            std::cout << key << ": " << value << "\n";
-        }
-        std::cout << "Body: " << http_request.body << "\n";
-        std::cout << "Request parsed.\n" << std::endl;
-
-        _HTTP_RESPONSE request = create_full_HTTP_RESPONSE_wide_params(
-            HTTP_STATUS_CODE::OK,
-            HTTP_VERSION::HTTP_1_1,
-            HTTP_METHOD::GET,
-            "Hello, World!",
-            HTTP_CONTENT_TYPE::TEXT_HTML,
-            "/",
-            "close",
-            "localhost:"+std::to_string(this->port)
-        );
-        std::cout << "\nResponse to send:" << std::endl;
-        std::cout << request.format_to_string() << std::endl;
-        std::cout << std::endl;
-        size_t total_sent = 0;
-        while (total_sent < request.req_length()) {
-            size_t sent_bytes = send(client_socket, request.format_and_to_c_str() + total_sent, request.req_length() - total_sent, 0);
-            if (sent_bytes == SOCKET_ERROR) {
-                std::cerr << "Failed to send response with error: " << WSAGetLastError() << std::endl;
-                break;
+        if(verbose)
+            for (const auto& [key, value] : http_request.headers) {
+                std::cout << key << ": " << value << "\n";
             }
-            total_sent += sent_bytes;
+        if(verbose)std::cout << "Body: " << http_request.body << "\n";
+        if(verbose)std::cout << "Request parsed.\n" << std::endl;
+
+        if(http_request.method == "OPTIONS"){
+            _HTTP_RESPONSE preflight_response = create_full_HTTP_RESPONSE_wide_params(
+                HTTP_STATUS_CODE::OK,
+                HTTP_VERSION::HTTP_1_1,
+                HTTP_METHOD::OPTIONS,
+                "",
+                HTTP_CONTENT_TYPE::TEXT_PLAIN,
+                http_request.url,
+                "close",
+                "localhost:"+std::to_string(this->port)
+            );
+
+            preflight_response.headers.content_length = "0";
+
+            if(verbose)std::cout << "\nPreflight Response to send:" << std::endl;
+            if(verbose)std::cout << preflight_response.format_to_string() << std::endl;
+
+            size_t total_sent = __send(client_socket, preflight_response.format_and_to_c_str(), preflight_response.req_length(), 0);
+
+            if(verbose)std::cout << "Preflight Response sent. " << total_sent << " bytes sent out of " << preflight_response.req_length() << " bytes." << std::endl;
+        } else {
+            _HTTP_RESPONSE response = create_full_HTTP_RESPONSE_wide_params(
+                HTTP_STATUS_CODE::OK,
+                HTTP_VERSION::HTTP_1_1,
+                HTTP_METHOD::POST,
+                "Hello, World!",
+                HTTP_CONTENT_TYPE::TEXT_PLAIN,
+                "/",
+                "close",
+                "localhost:"+std::to_string(this->port)
+            );
+
+            if(http_request.url == "/login"){
+                if(verbose)std::cout << "login endpoint" << std::endl;
+                login_endpoint(http_request, response);
+            }
+            else if(http_request.url == "/register"){
+                if(verbose)std::cout << "register endpoint" << std::endl;
+                register_endpoint(http_request, response);
+            }
+            
+
+            if(verbose)std::cout << "\nResponse to send:" << std::endl;
+            if(verbose)std::cout << response.format_to_string() << std::endl;
+            if(verbose)std::cout << std::endl;
+            size_t total_sent = __send(client_socket, response.format_and_to_c_str(), response.req_length(), 0);
+        
+            if(verbose)std::cout << "Response sent. " << total_sent << " bytes sent out of " << response.req_length() << " bytes." << std::endl;
+
+            // Close the client socket after communication
         }
-       
-        std::cout << "Response sent. " << total_sent << " bytes sent out of " << request.req_length() << " bytes." << std::endl;
-
-        // std::string response =
-        //     "HTTP/1.1 200 OK\r\n"
-        //     "Content-Type: text/html\r\n"
-        //     "Content-Length: 12\r\n"
-        //     "Connection: close\r\n"
-        //     "Host: localhost:9090\r\n"
-        //     "\r\n"
-        //     "Hello, World!";
-
-
-        // Close the client socket after communication
         closesocket(client_socket);
+        if(verbose)std::cout <<"\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
     }
+
 }

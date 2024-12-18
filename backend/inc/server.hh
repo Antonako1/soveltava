@@ -9,6 +9,8 @@
 #include <http.hh>
 #include <string>
 
+extern std::string port; /*main.cc*/
+
 class Server {
 public:
     short port;
@@ -23,5 +25,8 @@ private:
     SOCKET listen_socket_;
     sockaddr_in server_addr_;
 };
+
+
+
 
 #endif // SERVER_HH

@@ -22,3 +22,17 @@ export const comparePassword = async (
 ): Promise<boolean> => {
   return await bcrypt.compare(password, hashedPassword);
 };
+
+export interface LoginRequest {
+  id: string;
+  email: string;
+  token: string;
+}
+
+export const compare_auth_token = (input:LoginRequest) => {
+  return input.token === input.id+input.email
+}
+
+export const generate_auth_token = (input:LoginRequest) => {
+  return input.id+input.email
+}

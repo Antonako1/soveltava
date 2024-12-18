@@ -4,6 +4,10 @@
 
 Database::Database() : db(nullptr) {}
 
+Database::Database(const std::string &db_name) : db(nullptr) {
+    this->db_name = db_name;
+}
+
 bool Database::open(const std::string& db_name) {
     if (sqlite3_open(db_name.c_str(), &db) != SQLITE_OK) {
         std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
@@ -58,10 +62,10 @@ bool Database::execute_query(const std::string& sql) {
 
 void Database::create_tables() {
     const char* create_user_table = R"(
-        CREATE TABLE IF NOT EXISTS User (
+        CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
-            email TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
             age INTEGER NOT NULL,
             password_hash TEXT NOT NULL,
             balance REAL NOT NULL
@@ -69,22 +73,20 @@ void Database::create_tables() {
     )";
 
     const char* create_crypto_table = R"(
-        CREATE TABLE IF NOT EXISTS Crypto (
+        CREATE TABLE IF NOT EXISTS cryptos (
             id INTEGER PRIMARY KEY,
+            tag TEXT NOT NULL UNIQUE,
             name TEXT NOT NULL,
-            symbol TEXT NOT NULL,
             price REAL NOT NULL
         );
     )";
 
     const char* create_stock_table = R"(
-        CREATE TABLE IF NOT EXISTS Stock (
+        CREATE TABLE IF NOT EXISTS stocks (
             id INTEGER PRIMARY KEY,
-            user_id INTEGER NOT NULL,
-            crypto_id INTEGER NOT NULL,
-            amount REAL NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES User(id),
-            FOREIGN KEY (crypto_id) REFERENCES Crypto(id)
+            tag TEXT NOT NULL UNIQUE,
+            name TEXT NOT NULL,
+            price REAL NOT NULL
         );
     )";
 
@@ -93,12 +95,16 @@ void Database::create_tables() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             crypto_id INTEGER NOT NULL,
+            stock_id INTEGER NOT NULL,
+            
             amount REAL NOT NULL,
             price REAL NOT NULL,
             type TEXT NOT NULL CHECK(type IN ('buy', 'sell')),
             date TEXT DEFAULT CURRENT_TIMESTAMP,
+
             FOREIGN KEY (user_id) REFERENCES User(id),
-            FOREIGN KEY (crypto_id) REFERENCES Crypto(id)
+            FOREIGN KEY (crypto_id) REFERENCES Crypto(id),
+            FOREIGN KEY (stock_id) REFERENCES Stock(id)
         );
     )";
 
@@ -123,7 +129,7 @@ void Database::create_tables() {
         std::cerr << "Error creating Transaction table: " << error_message << std::endl;
         sqlite3_free(error_message);
     }
-}
+}   
 
 void Database::insert_sample_data() {
     const char* insert_user = R"(
@@ -132,18 +138,18 @@ void Database::insert_sample_data() {
     )";
 
     const char* insert_crypto = R"(
-        INSERT INTO Crypto (id, name, symbol, price)
-        VALUES (1, 'Bitcoin', 'BTC', 50000.00);
+        INSERT INTO Crypto (id, tag, name, price)
+        VALUES (1, 'BTC', 'Bitcoin', 50000.00);
     )";
 
     const char* insert_stock = R"(
-        INSERT INTO Stock (id, user_id, crypto_id, amount)
-        VALUES (1, 1, 1, 0.02);
+        INSERT INTO Stock (id, tag, name, price)
+        VALUES (1, 'AAPL', 'Apple Inc.', 150.00);
     )";
 
     const char* insert_transaction = R"(
-        INSERT INTO transactions (id, user_id, crypto_id, amount, price, type, date)
-        VALUES (1, 1, 1, 0.01, 50000.00, 'buy', '2024-12-17');
+        INSERT INTO transactions (id, user_id, crypto_id, stock_id, amount, price, type, date)
+        VALUES (1, 1, 1, 1, 0.5, 50000.00, 'buy', '2021-09-01 12:00:00');
     )";
 
     char* error_message = nullptr;

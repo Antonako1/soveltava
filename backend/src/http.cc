@@ -60,6 +60,9 @@ _HTTP_RESPONSE create_full_HTTP_RESPONSE(
     case HTTP_STATUS_CODE::INTERNAL_SERVER_ERROR:
         status_code_str = "500 Internal Server Error";
         break;
+    case HTTP_STATUS_CODE::UNAUTHORIZED:
+        status_code_str = "401 Unauthorized";
+        break;
     }
 
     switch (version)
@@ -82,6 +85,9 @@ _HTTP_RESPONSE create_full_HTTP_RESPONSE(
         break;
     case HTTP_METHOD::PUT:
         method_str = "PUT";
+        break;
+    case HTTP_METHOD::OPTIONS:
+        method_str = "OPTIONS";
         break;
     }
 
@@ -109,8 +115,13 @@ _HTTP_RESPONSE create_full_HTTP_RESPONSE_wide_params(
     const std::string& host
 )
 {
-    std::string content_length = std::to_string(body.size() - 1);
-    _HTTP_HEADER headers = create_full_http_header(content_length, content_type, connection, host);
+    size_t content_length = body.length();
+    if(content_length >= 4294967295){
+        content_length = 0;
+    }
+
+    std::string str_content_length = std::to_string(content_length);
+    _HTTP_HEADER headers = create_full_http_header(str_content_length, content_type, connection, host);
 
     _HTTP_RESPONSE HTTP_RESPONSE = create_full_HTTP_RESPONSE(
         status_code,

@@ -5,6 +5,8 @@
 #include <string>
 #include <map>
 
+extern bool verbose; /*main.cc*/
+
 // #ifdef __cplusplus
 // extern "C" {
 // #endif
@@ -13,7 +15,8 @@ enum class HTTP_STATUS_CODE {
     OK = 200,  // Standard OK response
     BAD_REQUEST = 400,  // The request could not be understood by the server
     NOT_FOUND = 404,  // Resource not found on the server
-    INTERNAL_SERVER_ERROR = 500  // General server error
+    INTERNAL_SERVER_ERROR = 500,  // General server error
+    UNAUTHORIZED = 401  // Unauthorized access
 };
 
 enum class HTTP_VERSION {
@@ -24,7 +27,8 @@ enum class HTTP_VERSION {
 enum class HTTP_METHOD {
     GET = 0x0001,   // GET method, typically used for fetching resources
     POST = 0x0002,  // POST method, used for sending data to the server
-    PUT = 0x0004    // PUT method, used to update an existing resource
+    PUT = 0x0004,   // PUT method, used to update an existing resource
+    OPTIONS = 0x0008// OPTIONS method, used for preflight requests
 };
 
 enum class HTTP_HEADER {
@@ -35,7 +39,7 @@ enum class HTTP_HEADER {
 enum class HTTP_CONTENT_TYPE {
     TEXT_HTML = 0x0001,       // Content type: text/html
     TEXT_PLAIN = 0x0002,      // Content type: text/plain
-    APPLICATION_JSON = 0x0004 // Content type: application/json
+    APPLICATION_JSON = 0x0004,// Content type: application/json
 };
 
 
@@ -74,6 +78,13 @@ typedef struct _HTTP_HEADER {
         if(!host.empty()) {
             headers += "Host: " + host + "\r\n";
         }
+
+        // cors headers
+        headers += "Access-Control-Allow-Origin: *\r\n";  // Allows all origins (for development)
+        headers += "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n";  // Allowed HTTP methods
+        headers += "Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With\r\n";  // Allowed headers
+        
+
         return headers;
     }
 
@@ -218,6 +229,27 @@ create_full_HTTP_RESPONSE_wide_params(
     const std::string& host
 );
 
+
+/*+++
+HTTP ENDPOINTS
+
+register
+login
+verify
+refresh
+update
+delete
+get
+
+---*/
+
+void register_endpoint(_HTTP_REQUEST& request, _HTTP_RESPONSE& response);
+void login_endpoint(_HTTP_REQUEST& request, _HTTP_RESPONSE& response);
+void verify_endpoint(_HTTP_REQUEST& request, _HTTP_RESPONSE& response);
+void refresh_endpoint(_HTTP_REQUEST& request, _HTTP_RESPONSE& response);
+void update_endpoint(_HTTP_REQUEST& request, _HTTP_RESPONSE& response);
+void delete_endpoint(_HTTP_REQUEST& request, _HTTP_RESPONSE& response);
+void get_endpoint(_HTTP_REQUEST& request, _HTTP_RESPONSE& response);
 
 // #ifdef __cplusplus
 // }

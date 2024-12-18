@@ -6,13 +6,18 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <json.hpp> 
+using json = nlohmann::json;
 
 class Database {
 protected:
     sqlite3* db;
 
 public:
+    std::string db_name;
     Database();
+    
+    Database(const std::string& db_name);
 
     bool open(const std::string& db_name);
 
@@ -32,6 +37,7 @@ public:
     void Database::create_tables();
 };
 
+extern Database db; /*main.cc*/
 
 /*+++
 USER MODEL
@@ -70,6 +76,10 @@ public:
 
     bool save(Database& db);
     static User find_by_id(Database& db, int user_id);
+
+    static User find_by_email(Database& db, const std::string& email);
+
+    json to_json();    
 };
 
 /*+++
@@ -78,13 +88,13 @@ CRYPTO MODEL
 class Crypto {
 private:
     int id;
+    std::string tag;
     std::string name;
-    std::string symbol;
     double price;
 
 public:
     Crypto();
-    Crypto(int id, const std::string& name, const std::string& symbol, double price);
+    Crypto(int id, const std::string& name, const std::string& tag, double price);
     
     // Getters and Setters
     int get_id() const;
@@ -93,14 +103,18 @@ public:
     std::string get_name() const;
     void set_name(const std::string& name);
     
-    std::string get_symbol() const;
-    void set_symbol(const std::string& symbol);
+    std::string get_tag() const;
+    void set_tag(const std::string& tag);
     
     double get_price() const;
     void set_price(double price);
 
     bool save(Database& db);
     static Crypto find_by_id(Database& db, int crypto_id);
+
+    static Crypto find_by_tag(Database& db, const std::string& tag);
+
+    json to_json();  
 };
 
 /*+++
@@ -109,29 +123,33 @@ STOCK MODEL
 class Stock {
 private:
     int id;
-    int user_id;
-    int crypto_id;
-    double amount;
+    std::string tag;
+    std::string name;
+    double price;
 
 public:
     Stock();
-    Stock(int id, int user_id, int crypto_id, double amount);
+    Stock(int id, const std::string& tag, const std::string& name, double price);
 
     // Getters and Setters
     int get_id() const;
     void set_id(int id);
     
-    int get_user_id() const;
-    void set_user_id(int user_id);
+    std::string get_tag() const;
+    void set_tag(const std::string& tag);
     
-    int get_crypto_id() const;
-    void set_crypto_id(int crypto_id);
+    std::string get_name() const;
+    void set_name(const std::string& name);
     
-    double get_amount() const;
-    void set_amount(double amount);
+    double get_price() const;
+    void set_price(double price);
 
     bool save(Database& db);
     static Stock find_by_id(Database& db, int stock_id);
+
+    static Stock find_by_tag(Database& db, const std::string& tag);
+
+    json to_json();  
 };
 
 /*+++
@@ -142,6 +160,7 @@ private:
     int id;
     int user_id;
     int crypto_id;
+    int stock_id;
     double amount;
     double price;
     std::string type;
@@ -149,7 +168,7 @@ private:
 
 public:
     Transaction();
-    Transaction(int id, int user_id, int crypto_id, double amount, double price, const std::string& type, const std::string& date);
+    Transaction(int id, int user_id, int crypto_id, int stock_id, double amount, double price, const std::string& type, const std::string& date);
     
     // Getters and Setters
     int get_id() const;
@@ -166,6 +185,9 @@ public:
     
     double get_price() const;
     void set_price(double price);
+
+    int get_stock_id() const;
+    void set_stock_id(int stock_id);
     
     std::string get_type() const;
     void set_type(const std::string& type);
@@ -175,6 +197,14 @@ public:
 
     bool save(Database& db);
     static Transaction find_by_id(Database& db, int transaction_id);
+
+    static Transaction find_by_user_id(Database& db, int user_id);
+    static Transaction find_by_crypto_id(Database& db, int crypto_id);
+    static Transaction find_by_stock_id(Database& db, int stock_id);
+
+
+
+    json to_json();
 };
 
 #endif // DATABASE_HH

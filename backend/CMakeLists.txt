@@ -12,6 +12,8 @@ add_executable(cpp-backend-server
     src/http.cc
     src/models.cc
     src/database.cc
+    src/http_endpoints.cc
+    src/crypt.cc
 )
 
 # Include directories
